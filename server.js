@@ -59,6 +59,11 @@ io.on('connection', function(socket) {
             io.to(key).emit("nova-vloga", userRoles[key]);
         }
     });
+    socket.on("vote", (name, cas, room) => {
+       if (cas == "noc") {
+           io.in(room).emit('smrt', name);
+       }
+    });
     socket.on('disconnect', () => {
         getUserRooms(socket).forEach(room => {
             io.in(room).emit('user-disconnected', rooms[room].users[socket.id]);
