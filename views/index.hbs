@@ -1,37 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Morilec</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="lib/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <style>
+        button {
+            width: 200px;
+            height: 40px;
+            border-radius: 5px;
+            border: black, 2px, solid;
+            font-size: 20px;
+            background-color: white;
+        }
+
+        button:hover {
+            background-color: #DCDCDC;
+        }
+    </style>
     <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </head>
+
 <body>
-<div class="container-fluid">
-    <div class="row content">
-        <div class="col-sm-12">
-            <h1 class="text-center">MORILEC</h1>
+    <div class="container-fluid">
+        <div style="text-align: center;">
+            <h1 class="text-center">AMONG THE THREES</h1>
+             <br>
+            <br> <br>
+            <br>
+            <button id="create" onclick="createNewRoom()">Create</button>
+            <br>
+            <br>
+            <form action="/joinRoom" method="post">
+                <input type="text" name="room" placeholder="roomID">
+                <button type="submit" id="join">Join</button>
+            </form>
         </div>
+
+        <img src="Gif-ozadje-black.gif" alt="slika" style="width: 97%; position:absolute; bottom:0%; align:left;">
+
     </div>
-    <div class="row">
-        <div class="col-md-6 text-center">
-            <button id="create" class="btn btn-primary" onclick="createNewRoom()">Create</button>
-    </div>
-    <div class="col-md-6 text-center">
-        <form action="/joinRoom" method="post">
-            <input type="text" name="room" placeholder="roomID">
-            <button type="submit" id="join" class="btn btn-primary">Join</button>
-        </form>
-    </div>
-</div>
-</div>
-<script>
-function createNewRoom() {
-    window.location.href = "http://localhost:3000/createRoom";
-}
-</script>
+
+    <script>
+        function createNewRoom() {
+            window.location.href = "http://localhost:3000/createRoom";
+        }
+    </script>
 </body>
+
 </html>
