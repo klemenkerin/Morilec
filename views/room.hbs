@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Lobby</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="lib/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row content">
+        <div class="col-sm-3 sidenav">
+            <h3>Uporabniki:</h3>
+            <ul id="users">
+                {{#each allUsers}}
+                    <li>{{this}}</li>
+                {{/each}}
+            </ul>
+        </div>
+
+        <div class="col-sm-9">
+            <h1 class="text-center">LOBBY</h1>
+            <button id="button-zacetek" type="submit" class="btn btn-primary" style="display: none;" onclick="zacniIgro()">ZAČETEK</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    var socket = io();
+
+    const name = prompt('What is your name? ');
+    const room = location.pathname.substr(1);
+    socket.emit('new-user', room, name);
+
+    var list = document.getElementById("users");
+    var items = list.getElementsByTagName("li");
+    var buttonZacetek = document.getElementById("button-zacetek");
+    if (items.length == 0) {
+        buttonZacetek.style.display = "block";
+    }
+
+    function zacniIgro() {
+        socket.emit('zacetek-igre', room);
+    }
+
+    socket.on('user-connected', function(name) {
+        var user = document.createElement('li');
+        user.textContent = name;
+        users.appendChild(user);
+    });
+
+    socket.on('nova-vloga', function(vloga) {
+        console.log("vloga " + vloga);
+    });
+
+    socket.on('user-disconnected', function(name) {
+        var list = document.getElementById("users");
+        var items = list.getElementsByTagName("li");
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].outerText == name) {
+                list.removeChild(items[i]);
+            }
+        }
+    });
+</script>
+</body>
+</html>

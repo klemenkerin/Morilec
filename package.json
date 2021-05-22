@@ -1,0 +1,13 @@
+{
+  "name": "Morilec",
+  "version": "0.0.1",
+  "description": "morilec",
+  "dependencies": {
+    "express": "*",
+    "socket.io": "*",
+    "hbs": "*"
+  },
+  "scripts": {
+    "start": "node strenzik.js"
+  }
+}
