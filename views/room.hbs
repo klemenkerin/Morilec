@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Lobby</title>
     <meta charset="utf-8">
@@ -8,25 +9,22 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="/socket.io/socket.io.js"></script>
 </head>
-<body>
+
+<body style="background-color:black;">
 <div class="container-fluid">
-    <div class="row content">
-        <div class="col-sm-3 sidenav">
-            <h3>Uporabniki:</h3>
-            <ul id="users">
-                {{#each allUsers}}
-                    <li>{{this}}</li>
-                {{/each}}
-            </ul>
-        </div>
-
-        <div class="col-sm-9">
-            <h1 class="text-center">LOBBY</h1>
-            <button id="button-zacetek" type="submit" class="btn btn-primary" style="display: none;" onclick="zacniIgro()">ZAČETEK</button>
-        </div>
+    <div style="text-align: center;">
+        <button id="button-zacetek" type="submit" class="button-night" onclick="zacniIgro()" style="visibility: hidden;">ZAČETEK</button>
     </div>
-</div>
 
+    <div id="users" style="text-align: center; margin-top: 10%;">
+        {{#each allUsers}}
+            <button type="button" class="button-night" >{{this}}</button>
+        {{/each}}
+    </div>
+
+    <img src="ozadje_white_color.png" alt="sotor" style="width: 97%; position: absolute; bottom: 5px;">
+
+</div>
 <script>
     var socket = io();
 
@@ -35,29 +33,34 @@
     socket.emit('new-user', room, name);
 
     var list = document.getElementById("users");
-    var items = list.getElementsByTagName("li");
+    var items = list.getElementsByTagName("button");
     var buttonZacetek = document.getElementById("button-zacetek");
     if (items.length == 0) {
-        buttonZacetek.style.display = "block";
+        buttonZacetek.style.visibility = "visible";
     }
 
     function zacniIgro() {
         socket.emit('zacetek-igre', room);
     }
 
-    socket.on('user-connected', function(name) {
-        var user = document.createElement('li');
+    socket.on('user-connected', function (name) {
+        var user = document.createElement('button');
+        var br = document.createElement('br');
+        user.className = "button-night"
         user.textContent = name;
+        if (items.length % 3 == 0) {
+            users.appendChild(br);
+        }
         users.appendChild(user);
     });
 
-    socket.on('nova-vloga', function(vloga) {
+    socket.on('nova-vloga', function (vloga) {
         console.log("vloga " + vloga);
     });
 
-    socket.on('user-disconnected', function(name) {
+    socket.on('user-disconnected', function (name) {
         var list = document.getElementById("users");
-        var items = list.getElementsByTagName("li");
+        var items = list.getElementsByTagName("button");
         for (var i = 0; i < items.length; i++) {
             if (items[i].outerText == name) {
                 list.removeChild(items[i]);
@@ -65,5 +68,21 @@
         }
     });
 </script>
+
+<style>
+    .button-night {
+        width: 200px;
+        height: 40px;
+        border-radius: 5px;
+        border: white;
+        font-size: 20px;
+        background-color: white;
+        margin: 20px;
+    }
+    .button-night:hover {
+        background-color: #DCDCDC;
+    }
+</style>
 </body>
+
 </html>
