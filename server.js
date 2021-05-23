@@ -7,7 +7,7 @@ const port = process.env.PORT || 3000;
 app.set('views', './views');
 app.set('view engine', 'hbs');
 app.use(express.static('public'));
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 const rooms = {}
 
@@ -36,22 +36,25 @@ app.get('/:room', (req, res) => {
     for (const key in rooms[room].users) {
         allUsers.push(rooms[room].users[key]);
     }
-    res.render('room', {allUsers});
+    res.render('room', { allUsers });
 });
 
 function createNewRoom() {
     var room = Math.random().toString(36).substring(2, 7);
-    rooms[room] = {users : {}};
+    rooms[room] = { users: {} };
     return room;
 }
-
-io.on('connection', function(socket) {
+var glasovanje={}
+io.on('connection', function (socket) {
+    var stUporabnikov = 0;
+    
     console.log("new connection");
     socket.on('new-user', (room, name) => {
         socket.join(room);
         rooms[room].users[socket.id] = name;
         io.in(room).emit('user-connected', name);
         console.log(rooms);
+        stUporabnikov++;
     });
     socket.on("zacetek-igre", (room) => {
         var userRoles = addUserRoles(room);
@@ -60,9 +63,26 @@ io.on('connection', function(socket) {
         }
     });
     socket.on("vote", (name, cas, room) => {
-       if (cas == "noc") {
-           io.in(room).emit('smrt', name);
-       }
+        console.log("trenutno je"+cas)
+        if (cas == "noc") {
+            io.in(room).emit('smrt', name);
+        }
+
+        else if (cas == "dan") {
+            if(!glasovanje[name])glasovanje[name]=1;
+            else if(glasovanje[name]==1)
+            io.in(room).emit('konec', name);
+            else glasovanje[name]+=1;
+            console.log(glasovanje[name])
+        }
+    });
+    socket.on('konec-zmaga', (name, room) => {
+        console.log("kliče se konec_zmaga")
+        io.in(room).emit('zmaga', name);
+    });
+    socket.on('konec-poraz', (name, room) => {
+        console.log("kliče se konec-poraz")
+        io.in(room).emit('poraz', name);
     });
     socket.on('disconnect', () => {
         getUserRooms(socket).forEach(room => {
@@ -73,7 +93,7 @@ io.on('connection', function(socket) {
     });
 });
 
-function addUserRoles(room ) {
+function addUserRoles(room) {
     var users = {};
     var len = Object.keys(rooms[room].users).length;
 
@@ -120,6 +140,37 @@ function addUserRoles(room ) {
         i++;
     }
     return users
+}
+var volitve = {};
+function dodaj(name, room, namen) {
+    
+    if (namen == 0) {
+        for (var key in rooms[room].users) {
+            console.log(rooms[room].users[key])
+            if (rooms[room].users[key] == name) {
+                if (volitve[key] == null) {
+                    volitve[key] = 0;
+                    console.log(volitve[key])
+                }
+                else{
+                    volitve[key] = volitve[key]++;
+                    console.log(volitve[key])
+                } 
+            }
+        }
+    }
+
+    else{
+        var max=0;
+        var id=0;
+        for (var key in volitve) {
+            if(max<volitve[key])
+            max=volitve[key];
+            id=key;
+        }
+        return id;
+    }
+
 }
 
 function getUserRooms(socket) {
