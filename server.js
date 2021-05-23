@@ -10,6 +10,8 @@ app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}));
 
 const rooms = {}
+var userRoles = {};
+var votes = {}
 
 app.get('/', (req, res) => {
     res.render('index');
@@ -41,11 +43,11 @@ app.get('/:room', (req, res) => {
 
 function createNewRoom() {
     var room = Math.random().toString(36).substring(2, 7);
-    rooms[room] = {users : {}};
+    rooms[room] = {users: {}};
     return room;
 }
 
-io.on('connection', function(socket) {
+io.on('connection', function (socket) {
     console.log("new connection");
     socket.on('new-user', (room, name) => {
         socket.join(room);
@@ -54,15 +56,76 @@ io.on('connection', function(socket) {
         console.log(rooms);
     });
     socket.on("zacetek-igre", (room) => {
-        var userRoles = addUserRoles(room);
+        userRoles = addUserRoles(room);
         for (const key in userRoles) {
             io.to(key).emit("nova-vloga", userRoles[key]);
         }
+        votes = {};
     });
     socket.on("vote", (name, cas, room) => {
-       if (cas == "noc") {
-           io.in(room).emit('smrt', name);
-       }
+        if (cas == "noc") {
+            for (const key in userRoles) {
+                if (getSocketFromName(name, room) == key) {
+                    userRoles[key] = "smrt";
+                    console.log(userRoles);
+                }
+            }
+            io.in(room).emit('smrt', name);
+        }
+        console.log("cas " + cas);
+        if (cas == "dan") {
+            var activeRoles = 0;
+            for (const key in userRoles) {
+                if (userRoles[key] != "smrt") {
+                    activeRoles++;
+                }
+            }
+            console.log("activeroles " + activeRoles);
+
+            if (votes[name] == null) {
+                votes[name] = 1;
+            } else {
+                votes[name] += 1;
+            }
+            console.log(votes);
+
+            var oddaniGlasovi = 0;
+            for (const key in votes) {
+                oddaniGlasovi += votes[key];
+            }
+
+            if (oddaniGlasovi === activeRoles) {
+                var max = 0;
+                var morilec = "";
+                for (const key in votes) {
+                    if (votes[key] > max) {
+                        max = votes[key];
+                        morilec = key;
+                    }
+                }
+                for (const key in userRoles) {
+                    if (userRoles[key] == "morilec") {
+                        if (getNameFromSocket(key, room) == morilec) {
+                            io.in(room).emit('glasovanje-zmaga', morilec);
+                            oddaniGlasovi = 0;
+                            votes = {};
+                            userRoles = {};
+                        } else if (activeRoles === 2) {
+                            io.in(room).emit('morilec-zmaga', getNameFromSocket(key, room));
+                            console.log("morilec zmaga");
+                            oddaniGlasovi = 0;
+                            votes = {};
+                            userRoles = {};
+                        } else {
+                            io.in(room).emit('glasovanje-poraz', morilec);
+                            oddaniGlasovi = 0;
+                            votes = {};
+                            userRoles = {};
+                        }
+                    }
+                }
+            }
+        }
     });
     socket.on('disconnect', () => {
         getUserRooms(socket).forEach(room => {
@@ -73,53 +136,43 @@ io.on('connection', function(socket) {
     });
 });
 
-function addUserRoles(room ) {
+function addUserRoles(room) {
     var users = {};
     var len = Object.keys(rooms[room].users).length;
 
     var roles = [];
 
-    if (len <= 7) {
-        var random = Math.floor(Math.random() * len);
-        for (var i = 0; i < len; i++) {
-            if (i == random) {
-                roles[i] = "morilec"
-            } else {
-                roles[i] = "kmet";
-            }
+    var random = Math.floor(Math.random() * len);
+    for (var i = 0; i < len; i++) {
+        if (i == random) {
+            roles[i] = "morilec"
+        } else {
+            roles[i] = "kmet";
         }
     }
-    if (len > 7 && len <= 12) {
-        var random1 = Math.floor(Math.random() * len);
-        var random2 = Math.floor(Math.random() * len);
 
-        for (var i = 0; i < len; i++) {
-            if (i == random1 || i == random2) {
-                roles[i] = "morilec"
-            } else {
-                roles[i] = "kmet";
-            }
-        }
-    }
-    if (len > 12 && len <= 14) {
-        var random1 = Math.floor(Math.random() * len);
-        var random2 = Math.floor(Math.random() * len);
-        var random3 = Math.floor(Math.random() * len);
-
-        for (var i = 0; i < len; i++) {
-            if (i == random1 || i == random2 || i == random3) {
-                roles[i] = "morilec"
-            } else {
-                roles[i] = "kmet";
-            }
-        }
-    }
     var i = 0;
     for (const key in rooms[room].users) {
         users[key] = roles[i];
         i++;
     }
     return users
+}
+
+function getSocketFromName(name, room) {
+    for (const key in rooms[room].users) {
+        if (name == rooms[room].users[key]) {
+            return key;
+        }
+    }
+}
+
+function getNameFromSocket(socket, room) {
+    for (const key in rooms[room].users) {
+        if (key == socket) {
+            return rooms[room].users[key];
+        }
+    }
 }
 
 function getUserRooms(socket) {

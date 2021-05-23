@@ -13,154 +13,53 @@
 <body style="background:black;">
 <div class="container-fluid">
 
-    <button id="button-zacetek" type="submit" class="button-night btn-zacetek" onclick="zacniIgro()" style="display: none;">ZAČETEK</button>
+    <button id="button-zacetek" type="submit" class="button-night btn-zacetek" onclick="zacniIgro()"
+            style="display: none;">ZAČETEK
+    </button>
 
-
-    <img id="kmet-night" class="vloga" src="kmet-night.png" style="display: none;">
-    <img id="morilec-night" class="vloga" src="morilec-night.png" style="display: none;">
-    <img id="smrt-night" src="skull-white.png"  class="vloga" style="display: none;">
-
-    <img id="kmet-day" class="vloga" src="kmet-black.png" style="display: none;">
-    <img id="morilec-day" class="vloga" src="morilec-black.png" style="display: none;">
-    <img id="smrt-day" src="skull-black.png"  class="vloga" style="display: none;">
+    <div id="avatar">
+    </div>
 
     <div id="users" style="text-align: center; margin-top: 5%;">
         {{#each allUsers}}
-            <button type="button" class="button-night" id="{{this}}" onclick="getVote('{{this}}')">{{this}}</button>
+            <button type="button" class="button-night" id="{{this}}" onclick="getVote('{{this}}')" disabled>{{this}}</button>
         {{/each}}
     </div>
 
-    <img src="ozadje_white_color.png" id="ozadje-night" alt="sotor" class="ozadje" style="display: block;">
-    <img src="ozadje-kri-day.gif" id="ozadje-day" alt="sotor" class="ozadje" style="display: none;">
+    <div id="ozadje">
+        <img src="img/ozadje_white_color.png" id="ozadje-night" alt="sotor" class="ozadje">
+    </div>
 
 </div>
-<script>
-
-    var socket = io();
-
-    var cas = "noc";
-    var vloga = "";
-
-
-    const name = prompt('What is your name? ');
-    const room = location.pathname.substr(1);
-    socket.emit('new-user', room, name);
-
-    var list = document.getElementById("users");
-    var items = list.getElementsByTagName("button");
-    //console.log("items " + items);
-    var buttonZacetek = document.getElementById("button-zacetek");
-    if (items.length == 0) {
-        buttonZacetek.style.display = "block";
-    }
-
-    function zacniIgro() {
-        socket.emit('zacetek-igre', room);
-        gumb = document.getElementById("button-zacetek");
-        gumb.style.display = "none";
-    }
-
-    function getVote(name) {
-        socket.emit('vote', name, cas, room);
-        cas = "dan";
-    }
-
-    socket.on('nova-vloga', function (novaVloga) {
-        cas = "noc";
-        vloga = novaVloga;
-        console.log(novaVloga);
-        if (novaVloga == "kmet") {
-            for (const key in items) {
-                items[key].disabled = true;
-            }
-            var slika = document.getElementById("kmet-night");
-            slika.style.display = "block";
-        }
-        if (novaVloga == "morilec") {
-            var slika = document.getElementById("morilec-night");
-            slika.style.display = "block";
-        }
-    });
-
-    socket.on("smrt", function(nameSmrt) {
-       if (name == nameSmrt) {
-           var slika = document.getElementById("kmet-night");
-           slika.style.display = "none";
-           var smrtDay = document.getElementById("smrt-day");
-           smrtDay.style.display = "block";
-           vloga = "smrt";
-       } else {
-           for (const key in items) {
-               if (items[key].id == nameSmrt) {
-                   items[key].style.background = "red";
-               }
-           }
-       }
-       var body = document.getElementsByTagName("body");
-       body[0].style.background = "white";
-
-       if (vloga == "kmet") {
-           console.log("dela kmet");
-           var kmetDay = document.getElementById("kmet-day");
-           kmetDay.style.display = "block";
-           var kmetNight = document.getElementById("kmet-night");
-           kmetNight.style.display = "none";
-       }
-
-       if (vloga == "morilec") {
-           console.log("dela");
-           var morilecDay = document.getElementById("morilec-day");
-           morilecDay.style.display = "block";
-           var morilecNight = document.getElementById("morilec-night");
-           morilecNight.style.display = "none";
-       }
-
-        var ozadjeDay = document.getElementById("ozadje-day");
-        ozadjeDay.style.display = "block";
-        var ozadjeNight = document.getElementById("ozadje-night");
-        ozadjeNight.style.display = "none";
-    });
-
-    socket.on('user-connected', function (name) {
-        if (items.length % 3 == 0) {
-            users.innerHTML += "<br>";
-        }
-        users.innerHTML += "<button class='button-night' id='"+name+"' onclick='getVote(\"" + name +  "\")'>" + name + "</button>";
-    });
-
-    socket.on('user-disconnected', function (name) {
-        var list = document.getElementById("users");
-        var items = list.getElementsByTagName("button");
-        for (var i = 0; i < items.length; i++) {
-            if (items[i].outerText == name) {
-                list.removeChild(items[i]);
-            }
-        }
-    });
-</script>
+<script src="room.js"></script>
 
 <style>
     .button-night {
         width: 200px;
         height: 40px;
         border-radius: 5px;
-        border: white;
+        border: black 1px solid;
         font-size: 20px;
         background-color: white;
         margin: 20px;
     }
+
     .button-night:hover {
         background-color: #DCDCDC;
     }
+
     .button-night:disabled {
         background-color: #DCDCDC;
     }
+
     .vloga {
         width: 300px;
         margin: auto;
+        display: block;
     }
+
     .btn-zacetek {
-        margin:auto;
+        margin: auto;
     }
 
     .ozadje {
